@@ -301,6 +301,62 @@ function isUndefined(arg) {
 }
 
 },{}],2:[function(require,module,exports){
+var GestureDetector = require('./'),
+    radiansToDegrees = require('math-js/angles/radiansToDegrees'),
+    linearRegresion = require('./linearRegresion');
+
+function getGestureVector(moves){
+    var line = linearRegresion(moves),
+        direction = 0,
+        magitude = 0;
+
+    if(line.length>2){
+        var startPoint = line[0],
+            endPoint = line[line.length - 1];
+
+        direction = radiansToDegrees(Math.atan2(-(startPoint.x - endPoint.x), startPoint.y - endPoint.y));
+        magitude = Math.sqrt(Math.pow(Math.abs(startPoint.x - endPoint.x), 2) + Math.pow(Math.abs(startPoint.y - endPoint.y), 2));
+    }
+
+    return {
+        direction: direction,
+        magitude: magitude
+    };
+}
+
+window.onload = function(){
+
+    var detector = new GestureDetector();
+
+    detector.gestures.push(function(moves){
+        var vector = getGestureVector(moves);
+
+        if(vector.magitude < 5){
+            return 'tap';
+        }
+        if(vector.magitude > 5 && vector.magitude < 20){
+            return;
+        }
+
+        if(vector.direction > -45 && vector.direction < 45){
+            return 'up';
+        }
+        if(vector.direction < -135 || vector.direction > 135){
+            return 'down';
+        }
+        if(vector.direction < -45 && vector.direction > -135){
+            return 'left';
+        }
+        if(vector.direction > 45 && vector.direction < 135){
+            return 'right';
+        }
+    });
+
+    detector.on('gesture', function(event){
+        console.log(event.name);
+    });
+};
+},{"./":3,"./linearRegresion":4,"math-js/angles/radiansToDegrees":6}],3:[function(require,module,exports){
 var interact = require('interact-js'),
     EventEmitter = require('events').EventEmitter;
 
@@ -337,7 +393,54 @@ GestureDetector.destroy = function(){
 };
 
 module.exports = GestureDetector;
-},{"events":1,"interact-js":3}],3:[function(require,module,exports){
+},{"events":1,"interact-js":5}],4:[function(require,module,exports){
+module.exports = function linearRegresion(points) {
+    var sumX = 0,
+        sumY = 0,
+        sumXbyY = 0,
+        sumXbyX = 0,
+        x = 0,
+        y = 0,
+        numberOfPoints = points.length,
+        results = [];
+
+    /*
+     * Nothing to do.
+     */
+    if (numberOfPoints === 0) {
+        return [];
+    }
+
+    /*
+     * Calculate the sum for each of the parts necessary.
+     */
+    for (var i = 0; i < numberOfPoints; i++) {
+        x = points[i].x;
+        y = points[i].y;
+        sumX += x;
+        sumY += y;
+        sumXbyX += x*x;
+        sumXbyY += x*y;
+    }
+
+    /*
+     * Calculate m and b for the formular:
+     * y = x * m + b
+     */
+    var m = (numberOfPoints*sumXbyY - sumX*sumY) / (numberOfPoints*sumXbyX - sumX*sumX);
+    var b = (sumY/numberOfPoints) - (m*sumX)/numberOfPoints;
+
+
+    for (var i = 0; i < numberOfPoints; i++) {
+        results.push({
+            x: points[i].x,
+            y: points[i].x * m + b
+        });
+    }
+
+    return results;
+}
+},{}],5:[function(require,module,exports){
 var interactions = [],
     minMoveDistance = 5,
     interact,
@@ -729,4 +832,18 @@ function addEvent(element, type, callback) {
 }
 
 module.exports = interact;
+},{}],6:[function(require,module,exports){
+var constants = require('../constants');
+
+module.exports = function(radians) {
+    return (radians / constants.radiansInACircle) * constants.degreesInACircle;
+};
+},{"../constants":7}],7:[function(require,module,exports){
+var pi = Math.PI;
+
+module.exports = {
+    pi: pi,
+    degreesInACircle: 360,
+    radiansInACircle: 2 * pi
+};
 },{}]},{},[2])

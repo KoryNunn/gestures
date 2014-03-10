@@ -1,46 +1,36 @@
-module.exports = function findLineByLeastSquares(points) {
-    var sum_x = 0,
-        sum_y = 0,
-        sum_xy = 0,
-        sum_xx = 0,
-        count = 0,
+module.exports = function linearRegresion(points) {
+    var sumX = 0,
+        sumY = 0,
+        sumXbyY = 0,
+        sumXbyX = 0,
         x = 0,
         y = 0,
         numberOfPoints = points.length,
-        results = [];
+        results = [],
+        m,
+        b;
 
-    /*
-     * Nothing to do.
-     */
     if (numberOfPoints === 0) {
         return [];
     }
 
-    /*
-     * Calculate the sum for each of the parts necessary.
-     */
-    for (var v = 0; v < numberOfPoints; v++) {
-        x = points[v].x;
-        y = points[v].y;
-        sum_x += x;
-        sum_y += y;
-        sum_xx += x*x;
-        sum_xy += x*y;
-        count++;
+    for (var i = 0; i < numberOfPoints; i++) {
+        x = points[i].x;
+        y = points[i].y;
+        sumX += x;
+        sumY += y;
+        sumXbyX += x*x;
+        sumXbyY += x*y;
     }
 
-    /*
-     * Calculate m and b for the formular:
-     * y = x * m + b
-     */
-    var m = (count*sum_xy - sum_x*sum_y) / (count*sum_xx - sum_x*sum_x);
-    var b = (sum_y/count) - (m*sum_x)/count;
+    m = (numberOfPoints * sumXbyY - sumX * sumY) / (numberOfPoints * sumXbyX - sumX * sumX);
+    b = (sumY / numberOfPoints) - (m * sumX) / numberOfPoints;
 
 
-    for (var v = 0; v < numberOfPoints; v++) {
+    for (var i = 0; i < numberOfPoints; i++) {
         results.push({
-            x: points[v].x,
-            y: points[v].x * m + b
+            x: points[i].x,
+            y: points[i].x * m + b
         });
     }
 
